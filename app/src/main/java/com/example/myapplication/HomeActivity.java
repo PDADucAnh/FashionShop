@@ -1,109 +1,127 @@
 package com.example.myapplication;
 
-import static android.content.ContentValues.TAG;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
-import android.text.InputType;
 import android.text.TextWatcher;
-import android.util.Log;
-import android.widget.*;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.material.snackbar.Snackbar;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class HomeActivity extends AppCompatActivity {
-    ListView lvProducts;
-    List<Product> productList;
-    ProductAdapter adapter;
-    private RequestQueue mRequestQueue;
-    private StringRequest mStringRequest;
-    private String url = "https://fakestoreapi.com/products";
+    private RecyclerView rvProducts;
+    private ProductAdapter adapter;
+    private List<Product> productList;
+    private static final String URL = "https://fakestoreapi.com/products";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
-        getData();
-        lvProducts = findViewById(R.id.lvProducts);
-        EditText etSearch = findViewById(R.id.etSearch);
-        Button btnCart = findViewById(R.id.btnCart);
-        etSearch.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
 
+        // 1. Toolbar
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        // 2. RecyclerView
+        rvProducts = findViewById(R.id.rvProducts);
+        rvProducts.setLayoutManager(new GridLayoutManager(this, 2));
+
+        // 3. Adapter & list
         productList = new ArrayList<>();
-        productList.add(new Product("Áo vest nâu", "Lịch sự sang trọng", 95000, R.drawable.c1));
-        productList.add(new Product("Áo vest xanh", "Mang phong cách châu âu", 120000, R.drawable.c2));
-        productList.add(new Product("Áo vest xám", "Lịch lãm, quý phái", 87000, R.drawable.c3));
-        productList.add(new Product("Giày da", "Thanh lịch, thời trang", 180000, R.drawable.s1));
-        productList.add(new Product("Giày da báo", "Phong cách trẻ trung", 115000, R.drawable.s2));
-        productList.add(new Product("Giày đen", "Sang trọng, lịch lãm", 115000, R.drawable.s5));
-        productList.add(new Product("Giày thể thao", "Êm ái, thích hợp cho việc chạy bộ", 115000, R.drawable.s5));
-        productList.add(new Product("Áo thun trơn", "Thoáng mát dành cho những buổi hè, 2 màu đỏ và đen", 89000, R.drawable.t1));
-        productList.add(new Product("Áo thun trơn", "Thoáng mát dành cho những buổi hè, 2 màu đen và xanh xám", 89000, R.drawable.t2));
-        productList.add(new Product("Áo thun trơn", "Thoáng mát dành cho những buổi hè, 2 màu nâu và đen", 89000, R.drawable.t3));
-        productList.add(new Product("Áo thun trơn", "Thoáng mát dành cho những buổi hè, 2 màu xanh lá và đen", 89000, R.drawable.t4));
-
-        adapter = new ProductAdapter(this, productList);
-        lvProducts.setAdapter(adapter);
-
-        etSearch.addTextChangedListener(new TextWatcher() {
-            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            @Override public void afterTextChanged(Editable s) {}
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                String query = s.toString().toLowerCase().trim();
-                List<Product> filtered = new ArrayList<>();
-                if (query.isEmpty()) {
-                    filtered.addAll(productList);
-                } else {
-                    for (Product p : productList) {
-                        if (p.getName().toLowerCase().contains(query)) {
-                            filtered.add(p);
-                        }
-                    }
-                }
-                adapter.filterList(filtered);
-            }
-        });
-
-        btnCart.setOnClickListener(v -> {
-            startActivity(new Intent(this, CartActivity.class));
-        });
-
-        lvProducts.setOnItemClickListener((parent, view, position, id) -> {
+        adapter = new ProductAdapter(this, productList, product -> {
             Intent i = new Intent(this, ProductDetailActivity.class);
-            i.putExtra("product", adapter.getItem(position));
+            i.putExtra("product", product);
             startActivity(i);
         });
-    }
-    private void getData() {
-        // RequestQueue initialized
-        mRequestQueue = Volley.newRequestQueue(this);
+        rvProducts.setAdapter(adapter);
 
-        // String Request initialized
-        mStringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-
-                Toast.makeText(getApplicationContext(), "Response :" + response.toString(), Toast.LENGTH_LONG).show();//display the response on screen
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.i(TAG, "Error :" + error.toString());
+        // 4. Nút giỏ hàng:
+        //    - nếu rỗng => show Snackbar cam
+        //    - nếu có item => sang CartActivity
+        ImageButton btnCart = findViewById(R.id.btnCart);
+        btnCart.setOnClickListener(v -> {
+            if (Cart.cartItems.isEmpty()) {
+                Snackbar sb = Snackbar.make(
+                        findViewById(android.R.id.content),
+                        "Hãy thêm sản phẩm vào giỏ hàng",
+                        Snackbar.LENGTH_SHORT
+                );
+                sb.setBackgroundTint(
+                        ContextCompat.getColor(this, R.color.orange_primary)
+                );
+                sb.setTextColor(
+                        ContextCompat.getColor(this, android.R.color.white)
+                );
+                sb.show();
+            } else {
+                startActivity(new Intent(this, CartActivity.class));
             }
         });
 
-        mRequestQueue.add(mStringRequest);
+        // 5. Tìm kiếm
+        EditText etSearch = findViewById(R.id.etSearch);
+        etSearch.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int st, int c, int a) {}
+            @Override public void afterTextChanged(Editable s) {}
+            @Override
+            public void onTextChanged(CharSequence s, int st, int b, int cnt) {
+                adapter.filter(s.toString().trim());
+            }
+        });
+
+        // 6. Lấy data ngay khi vào Home
+        fetchData();
+    }
+
+    private void fetchData() {
+        JsonArrayRequest req = new JsonArrayRequest(
+                Request.Method.GET, URL, null,
+                response -> {
+                    List<Product> temp = new ArrayList<>();
+                    for (int i = 0; i < response.length(); i++) {
+                        try {
+                            JSONObject o = response.getJSONObject(i);
+                            JSONObject r = o.getJSONObject("rating");
+                            temp.add(new Product(
+                                    o.getInt("id"),
+                                    o.getString("title"),
+                                    o.getString("description"),
+                                    o.getDouble("price"),
+                                    o.getString("category"),
+                                    o.getString("image"),
+                                    r.getDouble("rate"),
+                                    r.getInt("count")
+                            ));
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    adapter.updateData(temp);
+                },
+                error -> Toast.makeText(this,
+                        "Lỗi tải dữ liệu",
+                        Toast.LENGTH_SHORT
+                ).show()
+        );
+        Volley.newRequestQueue(this).add(req);
     }
 }
