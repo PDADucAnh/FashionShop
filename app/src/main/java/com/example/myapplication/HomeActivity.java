@@ -6,7 +6,9 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -32,52 +34,31 @@ public class HomeActivity extends AppCompatActivity {
     private List<Product> productList;
     private static final String URL = "https://fakestoreapi.com/products";
 
+    private FrameLayout flCartContainer;
+    private ImageButton btnCart;
+    private TextView tvCartBadge;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        // 1. Toolbar
+        // Toolbar
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        // 2. RecyclerView
+        // RecyclerView + Adapter
         rvProducts = findViewById(R.id.rvProducts);
         rvProducts.setLayoutManager(new GridLayoutManager(this, 2));
-
-        // 3. Adapter & list
         productList = new ArrayList<>();
         adapter = new ProductAdapter(this, productList, product -> {
-            Intent i = new Intent(this, ProductDetailActivity.class);
+            Intent i = new Intent(HomeActivity.this, ProductDetailActivity.class);
             i.putExtra("product", product);
             startActivity(i);
         });
         rvProducts.setAdapter(adapter);
 
-        // 4. Nút giỏ hàng:
-        //    - nếu rỗng => show Snackbar cam
-        //    - nếu có item => sang CartActivity
-        ImageButton btnCart = findViewById(R.id.btnCart);
-        btnCart.setOnClickListener(v -> {
-            if (Cart.cartItems.isEmpty()) {
-                Snackbar sb = Snackbar.make(
-                        findViewById(android.R.id.content),
-                        "Hãy thêm sản phẩm vào giỏ hàng",
-                        Snackbar.LENGTH_SHORT
-                );
-                sb.setBackgroundTint(
-                        ContextCompat.getColor(this, R.color.orange_primary)
-                );
-                sb.setTextColor(
-                        ContextCompat.getColor(this, android.R.color.white)
-                );
-                sb.show();
-            } else {
-                startActivity(new Intent(this, CartActivity.class));
-            }
-        });
-
-        // 5. Tìm kiếm
+        // Search
         EditText etSearch = findViewById(R.id.etSearch);
         etSearch.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int st, int c, int a) {}
@@ -88,8 +69,51 @@ public class HomeActivity extends AppCompatActivity {
             }
         });
 
-        // 6. Lấy data ngay khi vào Home
+        // Cart button & badge
+        flCartContainer = findViewById(R.id.flCartContainer);
+        btnCart          = findViewById(R.id.btnCart);
+        tvCartBadge      = findViewById(R.id.tvCartBadge);
+
+        btnCart.setOnClickListener(v -> {
+            if (Cart.cartItems.isEmpty()) {
+                Snackbar sb = Snackbar.make(
+                        findViewById(android.R.id.content),
+                        "Hãy thêm sản phẩm vào giỏ hàng",
+                        Snackbar.LENGTH_SHORT
+                );
+                // nền cam
+                sb.setBackgroundTint(
+                        ContextCompat.getColor(this, R.color.orange_primary)
+                );
+                // chữ trắng
+                sb.setTextColor(
+                        ContextCompat.getColor(this, android.R.color.white)
+                );
+                sb.show();
+            } else {
+                startActivity(new Intent(this, CartActivity.class));
+            }
+        });
+
+        // Lấy dữ liệu ngay khi mở
         fetchData();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Cập nhật badge mỗi khi quay lại Home
+        updateCartBadge();
+    }
+
+    private void updateCartBadge() {
+        int count = Cart.cartItems.size();
+        if (count <= 0) {
+            tvCartBadge.setVisibility(View.GONE);
+        } else {
+            tvCartBadge.setText(String.valueOf(count));
+            tvCartBadge.setVisibility(View.VISIBLE);
+        }
     }
 
     private void fetchData() {
@@ -117,9 +141,8 @@ public class HomeActivity extends AppCompatActivity {
                     }
                     adapter.updateData(temp);
                 },
-                error -> Toast.makeText(this,
-                        "Lỗi tải dữ liệu",
-                        Toast.LENGTH_SHORT
+                error -> Toast.makeText(
+                        this, "Lỗi tải dữ liệu", Toast.LENGTH_SHORT
                 ).show()
         );
         Volley.newRequestQueue(this).add(req);

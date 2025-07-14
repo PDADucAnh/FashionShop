@@ -16,6 +16,7 @@
         android:titleTextColor="@android:color/black"
         app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
 
+    <!-- Search + Cart container -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -33,15 +34,36 @@
             android:inputType="text"
             android:textSize="14sp"/>
 
-        <ImageButton
-            android:id="@+id/btnCart"
+        <!-- Cart icon + badge -->
+        <FrameLayout
+            android:id="@+id/flCartContainer"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:layout_marginStart="8dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            app:srcCompat="@drawable/ic_shopping_cart"
-            android:contentDescription="Giỏ hàng"
-            app:tint="@android:color/black" />
+            android:layout_marginStart="8dp">
+
+            <ImageButton
+                android:id="@+id/btnCart"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                app:srcCompat="@drawable/ic_shopping_cart"
+                android:contentDescription="Giỏ hàng"
+                app:tint="@android:color/black" />
+
+            <TextView
+                android:id="@+id/tvCartBadge"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_gravity="top|end"
+                android:translationX="4dp"
+                android:translationY="4dp"
+                android:background="@drawable/badge_background"
+                android:gravity="center"
+                android:text="0"
+                android:textColor="@android:color/white"
+                android:textSize="12sp"
+                android:visibility="gone"/>
+        </FrameLayout>
     </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
