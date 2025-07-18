@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -14,27 +13,30 @@
         android:background="@color/white_bg"
         app:navigationIcon="@drawable/ic_arrow_back"
         android:title="Chi tiết sản phẩm"
-        android:titleTextColor="@color/text_primary"/>
+        android:titleTextColor="@color/text_primary"
+        app:layout_scrollFlags="scroll|enterAlways"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
-    <ScrollView
+    <!-- Scroll vùng nội dung -->
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="?attr/actionBarSize">
+        android:layout_marginTop="?attr/actionBarSize"
+        android:fillViewport="true">
 
         <LinearLayout
             android:orientation="vertical"
-            android:layout_marginTop="33dp"
-            android:padding="16dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:padding="16dp"
             android:background="@color/burgundy_red">
 
             <!-- Card trắng bao quanh nội dung -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="8dp"
-                app:cardElevation="4dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="6dp"
                 android:layout_marginBottom="16dp">
 
                 <LinearLayout
@@ -46,14 +48,14 @@
                     <ImageView
                         android:id="@+id/ivImage"
                         android:layout_width="match_parent"
-                        android:layout_height="250dp"
-                        android:scaleType="centerCrop" />
+                        android:layout_height="240dp"
+                        android:scaleType="centerCrop"
+                        android:layout_marginBottom="12dp" />
 
                     <TextView
                         android:id="@+id/tvTitle"
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
                         android:textColor="@color/text_primary"
                         android:textSize="20sp"
                         android:textStyle="bold" />
@@ -69,7 +71,7 @@
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
+                        android:layout_marginTop="6dp"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
@@ -110,7 +112,7 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Nút thêm vào giỏ hàng màu cam -->
+            <!-- Nút thêm vào giỏ hàng -->
             <Button
                 android:id="@+id/btnAddToCart"
                 android:layout_width="match_parent"
@@ -118,7 +120,8 @@
                 android:text="Thêm vào giỏ hàng"
                 android:textColor="@color/white_bg"
                 android:backgroundTint="@color/orange_primary"
-                android:layout_marginTop="8dp"/>
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="24dp" />
         </LinearLayout>
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
